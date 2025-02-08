@@ -2,7 +2,7 @@
 
 **Dream APK Store** is a web-based APK repository built with PHP, MySQL, HTML, CSS, and JavaScript. Users can register, log in, upload their APKs (along with an app icon and screenshots), and download apps from the site. The project also includes an admin section for managing users and apps.
 
-> **Live Demo:** [https://dreamapk.online](https://dreamapk.online)
+> **Live Demo:** [https://dreamapk.store](https://dreamapk.store)
 
 ## Table of Contents
 
