@@ -9,7 +9,6 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Database Setup](#database-setup)
-- [Folder Structure](#folder-structure)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
