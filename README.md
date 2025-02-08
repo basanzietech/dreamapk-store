@@ -155,7 +155,7 @@ Contributions are welcome! To contribute:
    - Access the project via your browser (e.g., http://localhost/dreamapk-store).
 
 2. **Live Demo:**  
-   - The project is deployed at [https://dreamapk.online](https://dreamapk.online) for testing.
+   - The project is deployed at [https://dreamapk.store](https://dreamapk.store) for testing.
 
 ## License
 
