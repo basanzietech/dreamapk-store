@@ -1,0 +1,201 @@
+/* assets/css/style.css */
+
+/* General Styles */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Toolbar Styles */
+.toolbar {
+  /* Hakikisha hakuna mistari au border chini ya header */
+  border-bottom: none;
+}
+.toolbar h1 {
+  font-size: 1.5rem;
+  text-align: center;
+  flex-grow: 1;
+}
+
+/* Search Container */
+.search-container {
+  /* Ili inajitokeza bila msimamo (display handled by d-none) */
+}
+
+/* Adjustments kwa simu */
+@media (max-width: 576px) {
+  .toolbar h1 {
+    font-size: 1.5rem;
+  }
+  /* Unaweza kupunguza ukubwa wa icon kwa simu ikiwa unataka */
+  .toolbar button i {
+    font-size: 1.2rem;
+  }
+}
+
+/* Container for main content nita badili hapa kwa 1000 max-width*/
+.container-custom {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 0.25rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* App Card */
+.app-card {
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  text-align: center;
+  transition: box-shadow 0.2s;
+  margin-bottom: 1rem;
+}
+.app-card:hover {
+  box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+/*.app-card img {
+  max-width: 80px; 
+  height: auto;
+  margin-bottom: 0.5rem;
+}*/
+
+/* Share Button */
+.btn-share {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: #fff;
+}
+.btn-share:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
+/* Adjustments for forms */
+.form-control {
+  max-width: 400px;
+}
+
+.screenshots-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 0;
+}
+/*.screenshot-item img {
+    max-width: 150px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}*/
+.screenshot-item img:hover {
+    transform: scale(1.05);
+}
+
+
+.screenshot-item img {
+    width: 200px; /* Thibitisha upana wa picha uwe sawa */
+    height: 120px; /* Fanya urefu wa picha zote uwe sawa */
+    object-fit: cover; /* Crop sehemu zisizohitajika ili picha zote zilingane */
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.app-icon {
+    width: 80px; /* Rekebisha ukubwa kama inahitajika */
+    height: 80px; /* Hakikisha inabaki square */
+    border-radius: 20%; /* Inafanya pembe ziwe na mviringo kama zile za index.php */
+    object-fit: cover; /* Inahakikisha image haijachujuka */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Kivuli kizuri */
+}
+
+
+/*.apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}*/
+
+/* ---------------------------- */
+/* APPS GRID */
+/* ---------------------------- */
+.apps-grid {
+  display: grid;
+  gap: 1rem;
+  /* Kwa skrini kubwa, tunataka 2 per row; kwenye simu ndogo, 1 per row */
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 576px) {
+  .apps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/*.app-card {
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+}*/
+
+.app-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+/* ---------------------------- */
+/* FOOTER */
+/* ---------------------------- */
+.footer {
+  background-color: #343a40;
+  color: #fff;
+  padding: 1rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 2rem;
+}
+
+.footer .footer-col {
+  flex: 1 1 200px;
+  margin: 0.5rem;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+/* ---------------------------- */
+/* FORMS (LOGIN, REGISTER, UPLOAD) */
+/* ---------------------------- */
+.form-control {
+  max-width: 400px;
+}
+
+.btn {
+  font-size: 1rem;
+  padding: 0.5rem 0.5rem;
+}
+
+/* ---------------------------- */
+/* MEDIA QUERIES */
+/* ---------------------------- */
+@media (min-width: 768px) {
+  /* Kwa skrini kubwa, tukifanyia grid kuwa 2 per row (inaendelea kuwa hivyo) */
+  .apps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
