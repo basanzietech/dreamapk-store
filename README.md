@@ -67,6 +67,23 @@
      role ENUM('user', 'assistant', 'admin') DEFAULT 'user',
      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
    );
+   
+
+--Categories Table
+```sql
+CREATE TABLE Categories (
+    category_id INT PRIMARY KEY AUTO_INCREMENT,
+    category_name VARCHAR(255) NOT NULL
+);
+
+ --Developers Table
+sql
+CREATE TABLE Developers (
+    developer_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_name VARCHAR(255) NOT NULL,
+    contact_email VARCHAR(255),
+    website_url VARCHAR(255)
+);
 
    -- Table for apps
    CREATE TABLE apps (
@@ -82,6 +99,7 @@
      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
    );
    ```
+   
 
 4. **Set Permissions:**
 
