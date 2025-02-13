@@ -1,199 +1,219 @@
-/* General Styles */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
-}
-/* Toolbar Styles */
-.toolbar {
-  padding: 10px 15px;
-  border-bottom: none;
-}
-.toolbar h1 {
-  font-size: 1.3rem;
-  text-align: center;
-  flex-grow: 1;
-}
-
-/* Search Container */
-.search-container {
-  /* Maeneo ya ziada unaweza kuyaboresha kama inahitajika */
-}
-    /* Detail Section */
-    .detail-right {
-      /* Taarifa zote zitawekwa kulia */
-      text-align: end;
+    body {
+      background-color: #f8f9fa;
+      font-family: Arial, sans-serif;
     }
-    .detail-right p {
-      margin-bottom: 0.5rem;
+    /* Header styling */
+    header.toolbar {
+      background-color: #222;/*#333*/
+      padding: 1rem 0;
     }
-    .detail-right .btn {
-      white-space: nowrap;
-      margin-right: 5px;
+    header.toolbar h1 {
+      color: #fff;
+      font-size: 1.5rem;
+      margin: 0;
+      text-align: center;
     }
-@media (min-width: 768px) {
-  .detail-right {
-    text-align: end;
-  }
-}
-    
-
-/* App Card Styles */
-.app-card {
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
-}
-.app-card:hover {
-  transform: translateY(-5px);
-}
-.app-card img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 10px;
-}
-
-
-.app-card .btn {
-  /* Ili kuhakikisha maandishi ya button huonekana kwenye mstari mmoja */
-  white-space: nowrap;
-}
-/* Share Button */
-.btn-share {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-  color: #fff;
-}
-.btn-share:hover {
-  background-color: #138496;
-  border-color: #117a8b;
-}
-/* Adjustments for forms */
-.form-control {
-  max-width: 400px;
-}
-
-.screenshots-container {
-    display: flex;
-    overflow-x: auto;
-    gap: 10px;
-    padding: 10px 0;
-}
-
-.screenshot-item img:hover {
-    transform: scale(1.05);
-}
-
-.screenshot-item img {
-    width: 300px; /*200px Thibitisha upana wa picha uwe sawa */
-    height: 250px; /*120px  Fanya urefu wa picha zote uwe sawa */
-    object-fit:  cover;/*cover* Crop sehemu zisizohitajika ili picha zote zilingane */
-    border-radius: 5px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.app-icon {
-    width: 80px; /* Rekebisha ukubwa kama inahitajika */
-    height: 80px; /* Hakikisha inabaki square */
-    border-radius: 20%; /* Inafanya pembe ziwe na mviringo kama zile za index.php */
-    object-fit: cover; /* Inahakikisha image haijachujuka */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Kivuli kizuri */
-}
-/* ---------------------------- */
-/* APPS GRID */
-/* ---------------------------- */
-.apps-grid {
-  display: grid;
-  gap: 1rem;
-  /* Kwa skrini kubwa, tunataka 2 per row; kwenye simu ndogo, 1 per row */
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (max-width: 576px) {
-  .apps-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ---------------------------- */
-/* FOOTER */
-/* ---------------------------- */
-.footer {
-  background-color: #343a40;
-  color: #fff;
-  padding: 1rem 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.9rem;
-  margin-top: 2rem;
-}
-
-.footer .footer-col {
-  flex: 1 1 200px;
-  margin: 0.5rem;
-}
-
-.footer a {
-  color: #fff;
-  text-decoration: none;
-  margin-right: 1rem;
-}
-
-.footer a:hover {
-  text-decoration: underline;
-}
-
-/* ---------------------------- */
-/* MEDIA QUERIES */
-/* ---------------------------- */
-@media (min-width: 768px) {
-  /* Kwa skrini kubwa, tukifanyia grid kuwa 2 per row (inaendelea kuwa hivyo) */
-  .apps-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .toolbar h1 {
-    font-size: 1.1rem;
-  }
-  .toolbar button i {
-    font-size: 1.2rem;
-  }
-}
-  /* kwaajili ya Form*/
-    .container-custom {
-      max-width: 500px;
+    header.toolbar .nav-link {
+      color: #fff;
+      font-weight: 500;
+    }   
+    /* SEARCH CONTAINER */
+    .search-container {
+      background-color: #222;/*#333*/
     }
-    h2 {
-      color: #343a40;
+    .search-container input {
+      border: none;
+      border-radius: 4px;
     }
-    .form-label {
+    .search-container button {
+      background-color: #28a745;
+      border: none;
+      color: #fff;
+    }
+    /* OFFCANVAS (MENU) */
+    .offcanvas {
+      background-color: #222;/*#333*/
+    }
+    .offcanvas .nav-link {
+      color: #fff;
+    }
+    /* APP CARD */
+    .app-card {
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .app-card img {
+      border-radius: 8px;
+      width: 100%;
+      height: auto;
+      }  
+          /* APP ICON */
+    .app-icon {
+      max-width: 200px;
+      border-radius: 8px;
+    }
+    /* APP DETAILS */
+    .app-details h2 {
+      font-size: 1.75rem;
       font-weight: bold;
     }
-    .alert {
-      font-size: 0.9rem;
+    .app-details p {
+      margin-bottom: 0.5rem;
     }
-    /* Optional: kuongeza box-shadow na border-radius kwenye form container */
+    .btn-share {
+      background-color: #6c757d;
+      border: none;
+      color: #fff;
+    }
+    .btn-share:hover {
+      background-color: #5a6268;
+    }
+    /* CAROUSEL (Screenshots) */
+    #screenshotCarousel .carousel-item img {
+      width: 100%;
+      height: 400px;/* max-height 400*/
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+    }            
+    /* Centered card styling */
+    .edit-card {
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    /* Form elements */
+    .edit-card .form-label {
+      font-weight: 500;
+    }
+    .edit-card .form-control {
+      border-radius: 4px;
+    }
+        /* DASHBOARD CARD */
+    .dashboard-card {
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .dashboard-card .card-body {
+      padding: 20px;
+    }
+    /* TABLE STYLING */
+    .table thead {
+      background-color: #28a745;
+      color: #fff;
+    }
+    .table-striped tbody tr:nth-of-type(odd) {
+      background-color: #f2f2f2;
+    }
+    .table-bordered {
+      border: 1px solid #dee2e6;
+    }  
+        /* BUTTONS */
+    .btn-primary {
+      background-color: #28a745;
+      border: none;
+      transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+      background-color: #218838;
+    }
+    .btn-secondary {
+      background-color: #6c757d;
+      border: none;
+    }
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }   
+  /*UPLOADS CARD*/  
+    .upload-card {
+      max-width: 600px;
+      margin: 2rem auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+        /* Progress Bar styling */
+    .progress-container {
+      width: 100%;
+      height: 20px;
+      background-color: #e9ecef;
+      border-radius: 8px;
+      margin-top: 20px;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      transition: width 0.2s ease-in-out;
+    }   
+    /*REGISTER ACCOUNT*/
     .card {
       border: none;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+      .card-content {
       padding: 20px;
-      background: #fff;
+    }    
+    .card h2 {
+      font-weight: bold;
+      color: #333;
+    }
+    .btn-primary {
+      background-color: #28a745;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #218838;
+    }
+    .alert-danger p {
+      margin-bottom: 0.5rem;
     }
     a {
-      color: #0d6efd;
       text-decoration: none;
+    }   
+        /* Centered card styling (similar to registration form) */
+    .assistant-card {
+      max-width: 800px;
+      margin: 2rem auto;
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
-    a:hover {
-      text-decoration: underline;
+    /* Form elements */
+    .assistant-card .form-label {
+      font-weight: 500;
+    }
+    .assistant-card .form-control {
+      border-radius: 4px;
+    }
+    /* Table styling */
+    .assistant-card .table-responsive {
+      margin-top: 2rem;
+    }             
+    /* Footer styling */
+    footer.footer {
+      background-color: #222;
+      padding: 1rem 0;
+      color: #fff;
+      text-align: center;
+    }
+    footer.footer a {
+      color: #fff;
+      text-decoration: none;
+      margin-right: 1rem;
+    }
+    footer.footer p {
+      margin: 0;
     }

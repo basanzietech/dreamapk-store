@@ -14,7 +14,7 @@ if (!$app) {
     die("The app was not found.");
 }
 
-// Chukua jina la developer
+// Get developer username
 $stmt2 = $pdo->prepare("SELECT username FROM users WHERE id = ?");
 $stmt2->execute([$app['user_id']]);
 $developer = $stmt2->fetch();
@@ -25,13 +25,21 @@ $screenshots = json_decode($app['screenshots'], true);
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Responsive design -->
+  <!-- Responsive design -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Responsive website you can upload apks and you can download apks for free simple to use you can get direct download link try it now enjoy amazing design more people will love it. Dream apk store for better weather.">
+  <meta name="keywords" content="direct link, secure site, upload, download, benjamini omary, apk, apks, app, apps, store, dream">
+  <meta name="author" content="benjamini omary">
+  
+  <meta name="google-site-verification" content="oru7iffKii3izNSxniby6XBD4hSKsG9bNzjqDsUHucw" />
+  
+  <meta name="google-adsense-account" content="ca-pub-4690089323418332">
   <title><?php echo htmlspecialchars($app['app_name']); ?> - dream-apkstore</title>
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Custom CSS -->
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="assets/css/style.css">
   <script>
     function shareAPK(url) {
@@ -51,11 +59,16 @@ $screenshots = json_decode($app['screenshots'], true);
           .catch(() => alert('Failed to copy link.'));
       }
     }
+    function openModal(imgSrc) {
+      document.getElementById('modalImage').src = imgSrc;
+      var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+      myModal.show();
+    }
   </script>
 </head>
 <body>
   <!-- HEADER -->
-  <header class="toolbar d-flex justify-content-between align-items-center bg-dark text-white p-2">
+  <header class="toolbar d-flex justify-content-between align-items-center">
     <div class="ms-3">
       <h1 class="h4 m-0"><?php echo htmlspecialchars($app['app_name']); ?></h1>
     </div>
@@ -63,48 +76,64 @@ $screenshots = json_decode($app['screenshots'], true);
       <nav>
         <ul class="nav">
           <?php if (isLoggedIn()): ?>
-            <li class="nav-item"><a class="nav-link text-white" href="dashboard.php">Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="logout.php">Logout</a></li>
+            <li class="nav-item"><a class="nav-link" href="dashboard.php">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="logout.php">Logout</a></li>
           <?php endif; ?>
         </ul>
       </nav>
     </div>
   </header>
 
-  <div class="container container-custom my-4">
-    <div class="row">
+  <!-- MAIN CONTENT -->
+  <div class="container my-4">
+    <div class="row g-4">
       <!-- Left Column: App Icon -->
-      <div class="col-md-4 text-center mb-3">
+      <div class="col-md-4 text-center">
         <img src="<?php echo htmlspecialchars($app['logo']); ?>" alt="<?php echo htmlspecialchars($app['app_name']); ?>" class="img-fluid app-icon">
       </div>
-      <!-- Right Column: Developer Info, Downloads, Buttons, Description -->
-      <div class="col-md-8">
+      <!-- Right Column: App Info -->
+      <div class="col-md-8 app-details">
+        <h2><?php echo htmlspecialchars($app['app_name']); ?></h2>
         <p><strong>Developer:</strong> <?php echo htmlspecialchars($developer['username'] ?? 'Unknown'); ?></p>
         <p><strong>Downloads:</strong> <?php echo $app['downloads']; ?></p>
-        <div class="mb-3">
-          <a class="btn btn-primary btn-sm" href="download.php?id=<?php echo $app['id']; ?>">Download APK</a>
+        <div class="my-3">
+          <a class="btn btn-primary btn-sm me-2" href="download.php?id=<?php echo $app['id']; ?>">Download APK</a>
           <button class="btn btn-share btn-sm" onclick="shareAPK('<?php echo 'https://benja.yzz.me/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>
         </div>
-        <p><strong>Description:</strong></p>
-        <p><?php echo nl2br(htmlspecialchars($app['description'])); ?></p>
+        <div>
+          <h5>Description:</h5>
+          <p><?php echo nl2br(htmlspecialchars($app['description'])); ?></p>
+        </div>
       </div>
     </div>
     
-    <h3>Screenshots</h3>
-    <div class="screenshots-container d-flex overflow-auto gap-2 py-2">
-      <?php if ($screenshots && is_array($screenshots)): ?>
-        <?php foreach ($screenshots as $shot): ?>
-          <div class="screenshot-item flex-shrink-0">
-            <img src="<?php echo htmlspecialchars($shot); ?>" alt="Screenshot" class="img-thumbnail" style="max-width:150px; cursor: pointer;" onclick="openModal('<?php echo htmlspecialchars($shot); ?>')">
-          </div>
-        <?php endforeach; ?>
-      <?php else: ?>
-        <p>No screenshots available.</p>
-      <?php endif; ?>
-    </div>
+    <!-- SCREENSHOTS SECTION as Carousel -->
+    <h3 class="mt-5">Screenshots</h3>
+    <?php if ($screenshots && is_array($screenshots)): ?>
+      <div id="screenshotCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          <?php $active = true; ?>
+          <?php foreach ($screenshots as $shot): ?>
+            <div class="carousel-item <?php if($active){ echo 'active'; $active = false; } ?>">
+              <img src="<?php echo htmlspecialchars($shot); ?>" alt="Screenshot" onclick="openModal('<?php echo htmlspecialchars($shot); ?>')">
+            </div>
+          <?php endforeach; ?>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#screenshotCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#screenshotCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
+      </div>
+    <?php else: ?>
+      <p>No screenshots available.</p>
+    <?php endif; ?>
   </div>
   
-  <!-- Modal for full image view -->
+  <!-- MODAL FOR FULL IMAGE VIEW -->
   <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
@@ -118,25 +147,10 @@ $screenshots = json_decode($app['screenshots'], true);
       </div>
     </div>
   </div>
-
-  <footer class="footer bg-dark text-white p-3">
-    <div class="footer-col">
-      <a href="privacy.php" class="text-white me-3">Privacy Policy</a>
-      <a href="contact.php" class="text-white">Contact Us</a>
-    </div>
-    <div class="footer-col mt-2">
-      <p class="m-0">&copy; <?php echo date("Y"); ?> dreamapkstore. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <script>
-    function openModal(imgSrc) {
-      document.getElementById('modalImage').src = imgSrc;
-      var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-      myModal.show();
-    }
-  </script>
-
+  
+  <!-- FOOTER -->
+<?php include ('includes/footer.php'); ?>
+  
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

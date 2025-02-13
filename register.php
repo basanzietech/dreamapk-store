@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             header("Location: login.php");
             exit;
         } else {
-            $errors[] = "The problem occurred while inserting data.";
+            $errors[] = "A problem occurred while inserting data.";
         }
     }
 }
@@ -46,13 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Responsive design -->
   <title>Register - dreamapkstore</title>
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap CSS CDN -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS (if any) -->
   <link rel="stylesheet" href="assets/css/style.css">
+  
 </head>
 <body>
-  <div class="container container-custom my-5">
-    <div class="card">
+  <div class="container my-5">
+    <div class="card p-4">
       <h2 class="text-center mb-4">Create New Account</h2>
       <?php if ($errors): ?>
         <div class="alert alert-danger">
@@ -82,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           <button type="submit" class="btn btn-primary">Register Now</button>
         </div>
       </form>
-      <p class="text-center mt-3">Have you already registered? <a href="login.php">Login</a></p>
+      <p class="text-center mt-3">Have you already registered? <a href="login.php" class="text-primary">Login</a></p>
     </div>
   </div>
   <!-- Bootstrap JS Bundle -->
