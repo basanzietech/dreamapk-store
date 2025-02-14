@@ -97,8 +97,8 @@ $screenshots = json_decode($app['screenshots'], true);
         <p><strong>Developer:</strong> <?php echo htmlspecialchars($developer['username'] ?? 'Unknown'); ?></p>
         <p><strong>Downloads:</strong> <?php echo $app['downloads']; ?></p>
         <div class="my-3">
-          <a class="btn btn-primary btn-sm me-2" href="download.php?id=<?php echo $app['id']; ?>">Download APK</a>
-          <button class="btn btn-share btn-sm" onclick="shareAPK('<?php echo 'https://benja.yzz.me/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>
+          <a class="btn btn-primary btn-sm me-2" href="download.php?id=<?php echo $app['id']; ?>">Download APK</a>          
+          <button class="btn btn-secondary btn-sm" onclick="shareAPK('<?php echo DOMAIN . '/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>         
         </div>
         <div>
           <h5>Description:</h5>

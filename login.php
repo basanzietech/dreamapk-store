@@ -62,6 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
       </form>
       <p class="text-center mt-3">Don't have an account? <a href="register.php" class="text-primary">Register</a></p>
+      <p class="text-center mt-0">Forgot password? <a href="forgot_password.php" class="text-primary">Forgot Password</a>
+</p>
     </div>
   </div>
   <!-- Bootstrap JS Bundle -->

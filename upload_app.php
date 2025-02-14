@@ -73,29 +73,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // 3. Upload Screenshots (up to 4)
-    $screenshots = [];
-    for ($i = 1; $i <= 4; $i++) {
-        if (isset($_FILES["screenshot$i"]) && $_FILES["screenshot$i"]['error'] == UPLOAD_ERR_OK) {
-            $imageSize = getimagesize($_FILES["screenshot$i"]['tmp_name']);
-            $fileSize = $_FILES["screenshot$i"]['size'];
+// 3. Upload Screenshots (up to 4)
+$screenshots = [];
+for ($i = 1; $i <= 4; $i++) {
+    if (isset($_FILES["screenshot$i"]) && $_FILES["screenshot$i"]['error'] == UPLOAD_ERR_OK) {
+        $imageSize = getimagesize($_FILES["screenshot$i"]['tmp_name']);
+        $fileSize = $_FILES["screenshot$i"]['size'];
 
-            if (!$imageSize) {
-                $errors[] = "Screenshot $i is not a valid image.";
-            } elseif ($imageSize[0] > $maxScreenshotSize[0] || $imageSize[1] > $maxScreenshotSize[1]) {
-                $errors[] = "Screenshot $i dimensions must not exceed {$maxScreenshotSize[0]}x{$maxScreenshotSize[1]}px.";
-            } elseif ($fileSize > $maxScreenshotFileSize) {
-                $errors[] = "Screenshot $i file size must not exceed 1MB.";
+        if (!$imageSize) {
+            $errors[] = "Screenshot $i is not a valid image.";
+        } elseif ($imageSize[0] > $maxScreenshotSize[0] || $imageSize[1] > $maxScreenshotSize[1]) {
+            $errors[] = "Screenshot $i dimensions must not exceed {$maxScreenshotSize[0]}x{$maxScreenshotSize[1]}px. Your image is {$imageSize[0]}x{$imageSize[1]}px.";
+        } elseif ($fileSize > $maxScreenshotFileSize) {
+            $errors[] = "Screenshot $i file size must not exceed 1MB. Your file size is " . round($fileSize / 1024 / 1024, 2) . "MB.";
+        } else {
+            $shotPath = $uploadsDir . time() . "_{$i}_" . basename($_FILES["screenshot$i"]['name']);
+            if (move_uploaded_file($_FILES["screenshot$i"]['tmp_name'], $shotPath)) {
+                $screenshots[] = $shotPath;
             } else {
-                $shotPath = $uploadsDir . time() . "_{$i}_" . basename($_FILES["screenshot$i"]['name']);
-                if (move_uploaded_file($_FILES["screenshot$i"]['tmp_name'], $shotPath)) {
-                    $screenshots[] = $shotPath;
-                } else {
-                    $errors[] = "Failed to upload screenshot $i.";
-                }
+                $errors[] = "Failed to upload screenshot $i.";
             }
         }
     }
+}
 
     if ($editMode && empty($screenshots)) {
         $screenshotsJSON = $app['screenshots'];

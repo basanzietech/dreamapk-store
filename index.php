@@ -155,8 +155,8 @@ if (!empty($searchTerm)) {
               <h5 class="mt-2"><?php echo htmlspecialchars($app['app_name']); ?></h5>
               <p>Downloads: <?php echo $app['downloads']; ?></p>
               <div class="d-flex justify-content-center gap-2">
-                <a class="btn btn-primary btn-sm" href="app_detail.php?id=<?php echo $app['id']; ?>">See more</a>
-                <button class="btn btn-secondary btn-sm" onclick="shareAPK('<?php echo 'https://benja.yzz.me/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>
+                <a class="btn btn-primary btn-sm" href="app_detail.php?id=<?php echo $app['id']; ?>">See more</a>               
+<button class="btn btn-secondary btn-sm" onclick="shareAPK('<?php echo DOMAIN . '/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>                                       
               </div>
             </div>
           </div>
