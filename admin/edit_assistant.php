@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = clean($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm = $_POST['confirm'] ?? '';
+    $active = isset($_POST['active']) ? 1 : 0;
 
     if (empty($username) || empty($email)) {
         $errors[] = "Tafadhali jaza taarifa zote muhimu (Username na Email).";
@@ -39,11 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (empty($errors)) {
         if (!empty($password)) {
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $hashedPassword, $assistant_id]);
+            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ?, active = ? WHERE id = ?");
+            $stmt->execute([$username, $email, $hashedPassword, $active, $assistant_id]);
         } else {
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $assistant_id]);
+            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, active = ? WHERE id = ?");
+            $stmt->execute([$username, $email, $active, $assistant_id]);
         }
         header("Location: manage_assistants.php");
         exit;
@@ -63,19 +64,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 </head>
 <body>
-  <!-- Header -->
-  <header class="toolbar">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h1>Edit Assistant</h1>
-      <nav>
-        <ul class="nav">
-          <li class="nav-item"><a class="nav-link" href="manage_assistants.php">Manage Assistants</a></li>
-          <li class="nav-item"><a class="nav-link" href="../logout.php">Logout</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-  
+  <?php include('admin_header.php'); ?>
+  <div class="admin-main-content">
   <!-- Main Content -->
   <div class="container">
     <div class="edit-card">
@@ -104,6 +94,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           <label for="confirm" class="form-label">Confirm Password:</label>
           <input type="password" name="confirm" id="confirm" class="form-control">
         </div>
+        <div class="mb-4">
+          <label class="form-label">Status:</label>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="activeSwitch" name="active" value="1" <?php if ($assistant['active']) echo 'checked'; ?>>
+            <label class="form-check-label" for="activeSwitch">
+              <?php echo $assistant['active'] ? 'Active' : 'Inactive'; ?>
+            </label>
+          </div>
+        </div>
         <div class="d-grid">
           <button type="submit" class="btn btn-primary">Update</button>
         </div>
@@ -113,6 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   
   <!-- Footer -->
   <?php include ('../includes/footer.php'); ?>
+  </div>
   
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

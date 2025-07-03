@@ -1,6 +1,6 @@
 # Dream APK Store
 
-**Dream APK Store** is a web-based APK repository built with PHP, MySQL, HTML, CSS, and JavaScript. Users can register, log in, upload their APKs (along with an app icon and screenshots), and download apps from the site. The project also includes an admin section for managing users and apps.
+**Dream APK Store** ni web-based APK repository ya kisasa, iliyojengwa kwa PHP, MySQL, HTML, CSS, na JavaScript. Watumiaji wanaweza kusajili akaunti, ku-upload APK (na icon, screenshots, category, tags), na kudownload apps kwa urahisi. Admin na developers wana dashboard za kisasa zenye graph/charts na analytics.
 
 > **Live Demo:** [https://dreamapk.store](https://dreamapk.store)
 
@@ -15,89 +15,92 @@
 
 ## Features
 
-- **User Registration & Login:** Users can register and log in.
-- **APK Upload:** Users can upload an app with an app icon, APK file, and up to 4 screenshots.
-- **Download Tracking:** Downloads are counted and stored.
-- **Admin Section:** Admins can manage users, assistants, and apps.
-- **Responsive UI:** Built with Bootstrap and custom CSS, the project is responsive on desktops and mobile devices.
-- **Progress Bar on Upload:** An AJAX-based progress bar shows upload progress.
-- **Share Functionality:** Users can share the download link via the browser’s Web Share API or copy the link to the clipboard.
+- **User Registration & Login:** Kisasa, na animation ya kuvutia.
+- **APK Upload:** Upload app na icon, APK, screenshots, category, tags (modern form, validation, na feedback ya kisasa).
+- **Download Tracking:** Downloads zinahesabiwa na kuhifadhiwa.
+- **Filtering & Search:** Chuja apps kwa category, tag, search, na sorting (most downloaded, newest, oldest).
+- **Comments:** Watumiaji wanaweza kutoa comments kwenye kila app (modern, animated, na feedback ya haraka).
+- **Admin & Developer Dashboard:** Dashboard za kisasa zenye graph/charts (Chart.js) kwa analysis ya apps, downloads, users, nk.
+- **Responsive UI:** Inafanya kazi vizuri kwenye desktop, tablet, na simu.
+- **Modern UI/UX:** Animations (fadeInUp, zoomIn), hover effects, na muonekano wa kisasa kwenye kila sehemu (cards, tables, modals, footer, alerts).
+- **Progress Bar on Upload:** AJAX-based progress bar inaonyesha upload progress.
+- **Share Functionality:** Watumiaji wanaweza kushare link ya app kwa urahisi.
+- **Safe APK Download:** Headers za usalama zimeboreshwa ili kupunguza alerts za "file is dangerous" kwenye browsers.
 
 ## Installation
 
 ### Prerequisites
-
-- A web server with PHP (version 7.0 or higher recommended)
-- MySQL or MariaDB
-- Git (to clone the repository)
-- Composer (optional, if you want to manage PHP dependencies)
+- PHP (version 7.4 au zaidi inapendekezwa)
+- MySQL au MariaDB
+- Git (ku-clone repo)
+- Composer (optional, kwa PHP dependencies)
 
 ### Steps
 
 1. **Clone the Repository:**
-
    ```bash
    git clone https://github.com/basanzietech/dreamapk-store.git
    cd dreamapk-store
    ```
 
 2. **Configure Your Environment:**
-
-   Create a copy of your configuration file (if needed) and update it with your database credentials. For example, in `includes/config.php`, ensure you set:
-
+   Hariri `includes/config.php` na weka database credentials zako:
    ```php
    $host = 'localhost';
-   $db   = 'dream_apkstore'; // Change if your database name is different
-   $user = 'root';           // Change to your database username
-   $pass = '';               // Change to your database password
+   $db   = 'dream_apkstore';
+   $user = 'root';
+   $pass = 'root';
    $dsn = "mysql:host=$host;dbname=$db;charset=utf8mb4";
    ```
 
 3. **Set Up the Database:**
-
-   Use your preferred method (phpMyAdmin, MySQL CLI, etc.) to create a new database (if it does not exist) and execute the following SQL commands to create the necessary tables:
-
-   ```sql
-   -- Table for users
-   CREATE TABLE users (
-     id INT AUTO_INCREMENT PRIMARY KEY,
-     username VARCHAR(100) NOT NULL,
-     email VARCHAR(150) NOT NULL UNIQUE,
-     password VARCHAR(255) NOT NULL,
-     role ENUM('user', 'assistant', 'admin') DEFAULT 'user',
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-   );
-
-   -- Table for apps
-   CREATE TABLE apps (
-     id INT AUTO_INCREMENT PRIMARY KEY,
-     user_id INT NOT NULL,
-     app_name VARCHAR(150) NOT NULL,
-     description TEXT NOT NULL,
-     logo VARCHAR(255) NOT NULL,
-     apk_file VARCHAR(255) NOT NULL,         -- Stores the APK file path
-     screenshots TEXT,                       -- Stores JSON (screenshot paths)
-     downloads INT DEFAULT 0,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-   );
+   - Hakikisha MySQL server imewekwa na ina-run:
+     ```bash
+     sudo apt install mysql-server
+     sudo systemctl start mysql
+     ```
+   - Login kama root na tengeneza database na tables:
+     ```bash
+     database file nimeweka kwenye code database.sql
+     ```
+   - Kumbuka kubadilisha root password kama inahitajika:
+     ```sql
+     ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';
+     FLUSH PRIVILEGES;
    ```
 
 4. **Set Permissions:**
+   - Hakikisha `uploads/` directory ipo na ina write permissions:
+     ```bash
+     mkdir -p uploads
+     chmod 777 uploads
+     ```
 
-   Ensure that the `uploads/` directory exists in the root of your project and has proper write permissions so that PHP can store the uploaded files.
-
-5. **Configure Your Web Server:**
-
-   Point your web server’s document root to your project directory. For example, in Apache, you may set up a virtual host that points to the project folder.
-
-6. **Install Dependencies (Optional):**
-
-   If you plan to use Composer or other package managers for additional libraries (e.g., PHPMailer for sending emails), run:
-
+5. **Install PHP MySQL Driver:**
+   - Hakikisha extension ya PDO MySQL imewekwa:
    ```bash
-   composer install
-   ```
+     sudo apt install php-mysql
+     ```
+
+6. **Run the App Locally:**
+   - Anzisha PHP built-in server:
+     ```bash
+     php -S localhost:8080
+     ```
+   - Tembelea [http://localhost:8080](http://localhost:8080)
+
+7. **Troubleshooting:**
+   - **Error: could not find driver**: Install `php-mysql` na restart server.
+   - **Error: Connection refused**: Hakikisha MySQL server ina-run na config.php ina host/user/password sahihi.
+   - **Error: Access denied for user 'root'@'localhost'**: Badilisha root user kwenye MySQL kutumia password (angalia hatua ya 3 juu).
+
+## Modern Features & UX
+- **Filtering:** Category, tag, search, sorting (all combined)
+- **Pagination:** Orodha ya apps ina pagination bora
+- **Comments:** Animated, modern, na feedback ya haraka
+- **Charts:** Dashboard ya admin na developer ina Chart.js analytics
+- **Animations:** Kila sehemu muhimu ina fadeInUp, zoomIn, na hover effects
+- **Responsive:** Inafanya kazi vizuri kwenye devices zote
 
 ## Usage
 

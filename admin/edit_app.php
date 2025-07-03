@@ -24,16 +24,27 @@ $errors = [];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $appName     = clean($_POST['app_name'] ?? '');
     $description = clean($_POST['description'] ?? '');
-    // Additional fields such as logo, APK, etc. can be processed here.
-
+    $apkPath = $app['apk_path'] ?? '';
+    if (isset($_FILES['apk_file']) && $_FILES['apk_file']['error'] === UPLOAD_ERR_OK) {
+        $ext = strtolower(pathinfo($_FILES['apk_file']['name'], PATHINFO_EXTENSION));
+        if ($ext === 'apk') {
+            $newName = time() . '_' . uniqid() . '.apk';
+            $target = '../uploads/' . $newName;
+            if (move_uploaded_file($_FILES['apk_file']['tmp_name'], $target)) {
+                $apkPath = $target;
+            } else {
+                $errors[] = 'APK upload failed.';
+            }
+        } else {
+            $errors[] = 'Only APK files are allowed.';
+        }
+    }
     if (empty($appName) || empty($description)) {
         $errors[] = "Jaza taarifa zote muhimu.";
     }
-
     if (empty($errors)) {
-        // Update query – adjust this according to your database structure
-        $stmt = $pdo->prepare("UPDATE apps SET app_name = ?, description = ? WHERE id = ?");
-        $stmt->execute([$appName, $description, $app['id']]);
+        $stmt = $pdo->prepare("UPDATE apps SET app_name = ?, description = ?, apk_path = ? WHERE id = ?");
+        $stmt->execute([$appName, $description, $apkPath, $app['id']]);
         header("Location: index.php");
         exit;
     }
@@ -52,41 +63,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 </head>
 <body>
-  <!-- Header -->
-  <header class="toolbar">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h1><?php echo $editMode ? "Edit App" : "Add App"; ?></h1>
-      <nav>
-        <ul class="nav">
-          <li class="nav-item"><a href="index.php" class="nav-link">Dashboard</a></li>
-          <li class="nav-item"><a href="../logout.php" class="nav-link">Logout</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <div class="container">
-    <div class="upload-card">
-      <?php if ($errors): ?>
-        <div class="alert alert-danger">
-          <?php foreach ($errors as $error): ?>
-            <p class="mb-0"><?php echo $error; ?></p>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-      <form method="post" action="">
-        <div class="mb-3">
-          <label for="app_name" class="form-label">Jina la App:</label>
-          <input type="text" name="app_name" id="app_name" class="form-control" value="<?php echo $editMode ? htmlspecialchars($app['app_name']) : ''; ?>" required>
-        </div>
-        <div class="mb-3">
-          <label for="description" class="form-label">Description:</label>
-          <textarea name="description" id="description" class="form-control" rows="4" required><?php echo $editMode ? htmlspecialchars($app['description']) : ''; ?></textarea>
-        </div>
-        <!-- Additional file upload fields can be added here -->
-        <button type="submit" class="btn btn-primary w-100"><?php echo $editMode ? "Update" : "Submit"; ?></button>
-      </form>
+  <?php include('admin_header.php'); ?>
+  <div class="admin-main-content">
+    <!-- Main Content -->
+    <div class="container">
+      <div class="upload-card">
+        <?php if ($errors): ?>
+          <div class="alert alert-danger">
+            <?php foreach ($errors as $error): ?>
+              <p class="mb-0"><?php echo $error; ?></p>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+        <form method="post" action="" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="app_name" class="form-label">Jina la App:</label>
+            <input type="text" name="app_name" id="app_name" class="form-control" value="<?php echo $editMode ? htmlspecialchars($app['app_name']) : ''; ?>" required>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description:</label>
+            <textarea name="description" id="description" class="form-control" rows="4" required><?php echo $editMode ? htmlspecialchars($app['description']) : ''; ?></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="apk_file" class="form-label">APK File (optional):</label>
+            <input type="file" name="apk_file" id="apk_file" class="form-control" accept=".apk">
+            <?php if ($editMode && !empty($app['apk_path'])): ?>
+              <small class="text-muted">Current APK: <?php echo htmlspecialchars(basename($app['apk_path'])); ?></small>
+            <?php endif; ?>
+          </div>
+          <button type="submit" class="btn btn-primary w-100"><?php echo $editMode ? "Update" : "Submit"; ?></button>
+        </form>
+      </div>
     </div>
   </div>
 

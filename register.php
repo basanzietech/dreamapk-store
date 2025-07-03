@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = clean($_POST['username'] ?? '');
     $email    = clean($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $confirm  = $_POST['confirm'] ?? '';
+    $confirm = $_POST['confirm_password'] ?? '';
 
     if (empty($username) || empty($email) || empty($password)) {
         $errors[] = "Please fill in all required parts.";
@@ -32,8 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
         if ($stmt->execute([$username, $email, $hashedPassword, $role])) {
-            header("Location: login.php");
-            exit;
+    $success = 'Registration successful! Please login to continue.';
+       header("Location: login.php");
+        exit;
         } else {
             $errors[] = "A problem occurred while inserting data.";
         }
@@ -50,41 +51,85 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Custom CSS (if any) -->
   <link rel="stylesheet" href="assets/css/style.css">
-  
+  <style>
+    .register-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 2rem 2.5rem;
+      max-width: 400px;
+      margin: 2rem auto;
+      transition: box-shadow 0.3s, transform 0.2s;
+    }
+    .register-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      transform: translateY(-6px) scale(1.02);
+      z-index: 2;
+    }
+    .btn-primary {
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-primary:hover {
+      background: #0056b3;
+      transform: scale(1.04);
+    }
+    .animate__animated {
+      animation-duration: 0.7s;
+      animation-fill-mode: both;
+    }
+    .animate__fadeInUp {
+      animation-name: fadeInUp;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container my-5">
-    <div class="card p-4">
-      <h2 class="text-center mb-4">Create New Account</h2>
-      <?php if ($errors): ?>
-        <div class="alert alert-danger">
-          <?php foreach ($errors as $error): ?>
-            <p class="mb-0"><?php echo $error; ?></p>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
-      <form method="post" action="">
+    <div class="register-card card shadow-lg p-4 animate__animated animate__fadeInUp" style="max-width:400px;margin:auto;border-radius:20px;">
+      <h2 class="mb-4 text-center">Create Account</h2>
+      <form method="post" autocomplete="off">
         <div class="mb-3">
-          <label for="username" class="form-label">Developer Username:</label>
-          <input type="text" class="form-control" name="username" id="username" required>
+          <label class="form-label"><i class="fa fa-user me-1"></i> Username</label>
+          <input type="text" name="username" class="form-control" required maxlength="50">
         </div>
         <div class="mb-3">
-          <label for="email" class="form-label">Email:</label>
-          <input type="email" class="form-control" name="email" id="email" required>
+          <label class="form-label"><i class="fa fa-envelope me-1"></i> Email</label>
+          <input type="email" name="email" class="form-control" required maxlength="100">
         </div>
         <div class="mb-3">
-          <label for="password" class="form-label">Password:</label>
-          <input type="password" class="form-control" name="password" id="password" required>
+          <label class="form-label"><i class="fa fa-lock me-1"></i> Password</label>
+          <input type="password" name="password" class="form-control" required>
         </div>
         <div class="mb-3">
-          <label for="confirm" class="form-label">Confirm Password:</label>
-          <input type="password" class="form-control" name="confirm" id="confirm" required>
+          <label class="form-label"><i class="fa fa-lock me-1"></i> Confirm Password</label>
+          <input type="password" name="confirm_password" class="form-control" required>
         </div>
-        <div class="d-grid">
-          <button type="submit" class="btn btn-primary">Register Now</button>
-        </div>
+        
+        <?php if (!empty($errors)): ?>
+    <div class="alert alert-danger animate__animated animate__fadeInUp">
+        <?php foreach ($errors as $error): ?>
+            <?php echo $error . '<br>'; ?>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+<?php if (isset($success)): ?>
+    <div class="alert alert-success animate__animated animate__fadeInUp"><?php echo $success; ?></div>
+<?php endif; ?>   
+        
+        <button type="submit" class="btn btn-primary btn-lg w-100 mt-2"><i class="fa fa-user-plus me-2"></i>Register</button>
       </form>
-      <p class="text-center mt-3">Have you already registered? <a href="login.php" class="text-primary">Login</a></p>
+      <div class="mt-3 text-center">
+        <a href="login.php">Already have an account? Login</a>
+      </div>
     </div>
   </div>
   <!-- Bootstrap JS Bundle -->

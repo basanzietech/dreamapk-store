@@ -23,20 +23,8 @@ $users = $stmt->fetchAll();
   <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
-  <!-- Header -->
-  <header class="toolbar">
-    <div class="container d-flex justify-content-between align-items-center">
-      <h1>Manage Users</h1>
-      <nav>
-        <ul class="nav">
-          <li class="nav-item"><a class="nav-link" href="index.php">Dashboard</a></li>
-          <li class="nav-item"><a class="nav-link" href="manage_assistants.php">Manage Assistants</a></li>
-          <li class="nav-item"><a class="nav-link" href="../logout.php">Logout</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
-
+  <?php include('admin_header.php'); ?>
+  <div class="admin-main-content">
   <!-- Main Content (Card) -->
   <div class="container">
     <div class="dashboard-card">
@@ -73,6 +61,7 @@ $users = $stmt->fetchAll();
   
   <!-- Footer -->
   <?php include ('../includes/footer.php'); ?>
+  </div>
   
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -2,21 +2,81 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
-// Utafutaji (search) kama parameter
+// Get all categories for filter
+$catStmt = $pdo->query("SELECT DISTINCT category FROM apps WHERE category IS NOT NULL AND category != ''");
+$allCategories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+
+// Filtering by category
+$selectedCategory = isset($_GET['category']) ? clean($_GET['category']) : '';
 $searchTerm = isset($_GET['search']) ? clean($_GET['search']) : '';
 
+// Filtering by tag
+$selectedTag = isset($_GET['tag']) ? clean($_GET['tag']) : '';
+
+// Sorting
+$sort = isset($_GET['sort']) ? clean($_GET['sort']) : 'downloads_desc';
+
 if (!empty($searchTerm)) {
-    $stmt = $pdo->prepare("SELECT SQL_CALC_FOUND_ROWS * FROM apps WHERE app_name LIKE ? ORDER BY downloads DESC LIMIT 21");
-    $stmt->execute(["%$searchTerm%"]);
+    $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM apps WHERE app_name LIKE :search";
+    $params = [':search' => "%$searchTerm%"];
+    if (!empty($selectedCategory)) {
+        $sql .= " AND category = :category";
+        $params[':category'] = $selectedCategory;
+    }
+    if (!empty($selectedTag)) {
+        $sql .= " AND tags LIKE :tag";
+        $params[':tag'] = "%$selectedTag%";
+    }
+    // Sorting
+    if ($sort === 'newest') {
+        $sql .= " ORDER BY created_at DESC LIMIT 21";
+    } elseif ($sort === 'oldest') {
+        $sql .= " ORDER BY created_at ASC LIMIT 21";
+    } else {
+        $sql .= " ORDER BY downloads DESC LIMIT 21";
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $apps = $stmt->fetchAll();
     $totalApps = $pdo->query("SELECT FOUND_ROWS()")->fetchColumn();
     $totalPages = ceil($totalApps / 12);
 } else {
     $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
     $perPage = 21;
-    $data = paginate($pdo, $page, $perPage);
-    $apps = $data['apps'];
-    $totalApps = $data['total'];
+    $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM apps";
+    $params = [];
+    $where = [];
+    if (!empty($selectedCategory)) {
+        $where[] = "category = :category";
+        $params[':category'] = $selectedCategory;
+    }
+    if (!empty($selectedTag)) {
+        $where[] = "tags LIKE :tag";
+        $params[':tag'] = "%$selectedTag%";
+    }
+    if ($where) {
+        $sql .= " WHERE ".implode(' AND ', $where);
+    }
+    // Sorting
+    if ($sort === 'newest') {
+        $sql .= " ORDER BY created_at DESC LIMIT :offset, :perPage";
+    } elseif ($sort === 'oldest') {
+        $sql .= " ORDER BY created_at ASC LIMIT :offset, :perPage";
+    } else {
+        $sql .= " ORDER BY downloads DESC LIMIT :offset, :perPage";
+    }
+    $offset = ($page - 1) * $perPage;
+    $params[':offset'] = (int)$offset;
+    $params[':perPage'] = (int)$perPage;
+    $stmt = $pdo->prepare($sql);
+    // Bind all params
+    foreach ($params as $key => $val) {
+        $type = is_int($val) ? PDO::PARAM_INT : PDO::PARAM_STR;
+        $stmt->bindValue($key, $val, $type);
+    }
+    $stmt->execute();
+    $apps = $stmt->fetchAll();
+    $totalApps = $pdo->query("SELECT FOUND_ROWS()")->fetchColumn();
     $totalPages = ceil($totalApps / $perPage);
 }
 ?>
@@ -26,12 +86,12 @@ if (!empty($searchTerm)) {
   <meta charset="UTF-8">
   <!-- Meta viewport ili kuhakikisha responsive design -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Responsive website you can upload apks and you can download apks for free simple to use you can get direct download link try it now enjoy amazing design more people will love it. Dream apk store for better weather.">
+  <meta name="description" content="Responsive website you can upload apks and you can download apks for free simple to use you can get direct download link try it now enjoy amazing design more people will love it. Dream apk store for better weather.">
   <meta name="keywords" content="direct link, secure site, upload, download, benjamini omary, apk, apks, app, apps, store, dream">
   <meta name="author" content="benjamini omary">
-  
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dreamapk.store/index.php" />
   <meta name="google-site-verification" content="oru7iffKii3izNSxniby6XBD4hSKsG9bNzjqDsUHucw" />
-  
   <meta name="google-adsense-account" content="ca-pub-4690089323418332">
   <title>dreamapk store</title>
   <!-- Bootstrap CSS CDN -->
@@ -40,6 +100,35 @@ if (!empty($searchTerm)) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Custom CSS (ikiwa unatumia faili ya nje) -->
   <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Animate.css fallback for fadeInUp -->
+  <style>
+    .app-card {
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .app-card:hover {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+      transform: translateY(-6px) scale(1.03);
+      z-index: 2;
+    }
+    .animate__animated {
+      animation-duration: 0.7s;
+      animation-fill-mode: both;
+    }
+    .animate__fadeInUp {
+      animation-name: fadeInUp;
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 40px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4690089323418332" crossorigin="anonymous"></script>
 
   <script>
     // Toggle search form visibility
@@ -73,18 +162,33 @@ if (!empty($searchTerm)) {
 </head>
 <body>
   <!-- HEADER -->
-  <header class="toolbar d-flex justify-content-between align-items-center p-2">
+  <header class="toolbar d-flex align-items-center justify-content-between px-2 py-1" style="min-height:60px;">
     <!-- Toggle Menu Icon (Drawer) -->
-    <button class="btn btn-link" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
-      <i class="fa-solid fa-bars"></i>
+    <button class="btn btn-link d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu" aria-controls="offcanvasMenu">
+      <i class="fa-solid fa-bars fa-lg"></i>
     </button>
     <!-- Jina la Site -->
-    <h1 class="h5 m-0 flex-grow-1 text-center">dreamapk.store</h1>
+    <div class="flex-grow-1 text-center">
+      <h1 class="h5 m-0">dreamapk.store</h1>
+    </div>
     <!-- Search Icon -->
-    <button class="btn btn-link" id="searchIcon" onclick="toggleSearch()">
-      <i class="fa-solid fa-magnifying-glass"></i>
+    <button class="btn btn-link ms-auto" id="searchIcon" onclick="toggleSearch()">
+      <i class="fa-solid fa-magnifying-glass fa-lg"></i>
     </button>
   </header>
+
+  <!-- ADSENSE BANNER -->
+ <!-- <div class="container my-2">
+    <ins class="adsbygoogle"
+         style="display:block; text-align:center; margin: 1rem auto;"
+         data-ad-client="ca-pub-4690089323418332"
+         data-ad-slot="1234567890"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div> -->
 
   <!-- SEARCH FORM (inayofichwa kwa default) -->
   <div class="search-container d-none">
@@ -139,24 +243,62 @@ if (!empty($searchTerm)) {
   <!-- Ujumbe kwa watazamaji ambao hawajaingia -->
   <?php if (!isLoggedIn()): ?>
     <div class="container my-4">
-      <p>You can only download APK. If you are a developer, please <a href="register.php">register</a> to find the developer console.</p>
+      <p>You can only download APK file here. If you are a developer, please <a href="register.php">register</a> to find the developer console.</p>
     </div>
   <?php endif; ?>
 
   <!-- MAIN CONTENT: GRID YA APPS -->
   <div class="container-fluid my-4">
     <h2 class="mb-4">Popular apps</h2>
-    <div class="row">
+    <form class="row mb-3" method="get" action="index.php">
+      <div class="col-md-3 col-8 mb-2">
+        <select name="category" class="form-select" onchange="this.form.submit()">
+          <option value="">All Categories</option>
+          <?php foreach ($allCategories as $cat): ?>
+            <option value="<?php echo htmlspecialchars($cat); ?>" <?php if($selectedCategory==$cat) echo 'selected'; ?>><?php echo htmlspecialchars($cat); ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-md-4 col-12 mb-2">
+        <input type="text" name="search" class="form-control" placeholder="Search APK..." value="<?php echo htmlspecialchars($searchTerm); ?>">
+      </div>
+      <div class="col-md-3 col-8 mb-2">
+        <input type="text" name="tag" class="form-control" placeholder="Filter by tag (e.g. chat)" value="<?php echo htmlspecialchars($selectedTag); ?>">
+      </div>
+      <div class="col-md-2 col-4 mb-2">
+        <select name="sort" class="form-select" onchange="this.form.submit()">
+          <option value="downloads_desc" <?php if($sort==='downloads_desc') echo 'selected'; ?>>Most Downloaded</option>
+          <option value="newest" <?php if($sort==='newest') echo 'selected'; ?>>Newest</option>
+          <option value="oldest" <?php if($sort==='oldest') echo 'selected'; ?>>Oldest</option>
+        </select>
+      </div>
+      <div class="col-12 mb-2 d-md-none">
+        <button class="btn btn-primary w-100" type="submit">Filter</button>
+      </div>
+    </form>
+    <div class="row g-4 apps-grid">
       <?php if ($apps): ?>
         <?php foreach ($apps as $app): ?>
-          <div class="col-6 col-md-4 col-lg-3 mb-4">
-            <div class="app-card p-2 border">
-              <img src="<?php echo htmlspecialchars($app['logo']); ?>" alt="<?php echo htmlspecialchars($app['app_name']); ?>" class="img-fluid">
-              <h5 class="mt-2"><?php echo htmlspecialchars($app['app_name']); ?></h5>
-              <p>Downloads: <?php echo $app['downloads']; ?></p>
-              <div class="d-flex justify-content-center gap-2">
-                <a class="btn btn-primary btn-sm" href="app_detail.php?id=<?php echo $app['id']; ?>">See more</a>               
-<button class="btn btn-secondary btn-sm" onclick="shareAPK('<?php echo DOMAIN . '/app_detail.php?id=' . $app['id']; ?>')">Share Link</button>                                       
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="app-card d-flex flex-row align-items-center p-3 animate__animated animate__fadeInUp" style="min-height:140px;">
+              <div class="flex-shrink-0 me-3">
+                <img src="<?php echo htmlspecialchars($app['logo']); ?>" alt="<?php echo htmlspecialchars($app['app_name']); ?>" class="app-icon" style="width:80px;height:80px;object-fit:cover;border-radius:20%;box-shadow:0 4px 8px rgba(0,0,0,0.12);">
+              </div>
+              <div class="flex-grow-1">
+                <h5 class="mb-1"><?php echo htmlspecialchars($app['app_name']); ?></h5>
+                <span class="badge bg-info text-dark mb-2"> <?php echo htmlspecialchars($app['category'] ?? ''); ?> </span>
+                <div class="mb-2">
+                  <?php if (!empty($app['tags'])): ?>
+                    <?php foreach (explode(',', $app['tags']) as $tag): ?>
+                      <span class="badge bg-secondary">#<?php echo htmlspecialchars(trim($tag)); ?></span>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                  <a class="btn btn-primary btn-lg px-4" href="app_detail.php?id=<?php echo $app['id']; ?>">See more</a>
+                  <button class="btn btn-success btn-lg px-4" onclick="shareAPK('<?php echo DOMAIN . '/app_detail.php?id=' . $app['id'] . '.apk' ; ?>')"><i class="fa fa-share"></i> Share</button>
+                </div>
+                <div class="small text-muted">Downloads: <?php echo $app['downloads']; ?></div>
               </div>
             </div>
           </div>
@@ -167,12 +309,12 @@ if (!empty($searchTerm)) {
     </div>
     
     <!-- PAGINATION -->
-    <?php if (empty($searchTerm) && $totalPages > 1): ?>
+    <?php if ($totalPages > 1): ?>
       <nav class="mt-4">
         <ul class="pagination justify-content-center">
           <?php for ($i = 1; $i <= $totalPages; $i++): ?>
             <li class="page-item <?php if(isset($page) && $i==$page) echo 'active'; ?>">
-              <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+              <a class="page-link" href="?page=<?php echo $i; ?><?php if($selectedCategory) echo '&category='.urlencode($selectedCategory); ?><?php if($searchTerm) echo '&search='.urlencode($searchTerm); ?><?php if($selectedTag) echo '&tag='.urlencode($selectedTag); ?><?php if($sort) echo '&sort='.urlencode($sort); ?>"><?php echo $i; ?></a>
             </li>
           <?php endfor; ?>
         </ul>
