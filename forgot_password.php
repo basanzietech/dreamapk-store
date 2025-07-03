@@ -5,31 +5,43 @@ require_once 'includes/functions.php';
 $errors = [];
 $success = '';
 
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = clean($_POST['email'] ?? '');
-
-    if (empty($email)) {
-        $errors[] = "Please enter your email.";
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
     } else {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
-        $user = $stmt->fetch();
-
-        if ($user) {
-            // Generate a unique token for password reset
-            $token = bin2hex(random_bytes(50));
-            $stmt = $pdo->prepare("UPDATE users SET reset_token = ? WHERE email = ?");
-            $stmt->execute([$token, $email]);
-
-            // Send email with password reset link
-            $reset_link = DOMAIN . "/reset_password.php?token=" . $token;
-            $subject = "Password Reset Request";
-            $message = "Click the following link to reset your password: $reset_link";
-            mail($email, $subject, $message);
-
-            $success = "A password reset link has been sent to your email.";
+        $email = clean($_POST['email'] ?? '');
+        if (empty($email)) {
+            $errors[] = "Please enter your email.";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Please enter a valid email address.";
         } else {
-            $errors[] = "No account found with that email address.";
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user = $stmt->fetch();
+            if ($user) {
+                // Generate a unique token for password reset
+                $token = bin2hex(random_bytes(50));
+                $stmt = $pdo->prepare("UPDATE users SET reset_token = ? WHERE email = ?");
+                $stmt->execute([$token, $email]);
+                // Send email with password reset link
+                $reset_link = DOMAIN . "/reset_password.php?token=" . $token;
+                $subject = "Password Reset Request";
+                $message = "Click the following link to reset your password: $reset_link";
+                if (mail($email, $subject, $message)) {
+                    $success = "A password reset link has been sent to your email.";
+                } else {
+                    $errors[] = "Failed to send reset email. Please try again later.";
+                    error_log('MAIL ERROR (forgot_password): Failed to send reset email to ' . $email);
+                }
+            } else {
+                $errors[] = "No account found with that email address.";
+            }
         }
     }
 }
@@ -60,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
       <?php endif; ?>
       <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label for="email" class="form-label">Enter your email:</label>
           <input type="email" class="form-control" name="email" id="email" required>

@@ -9,8 +9,8 @@ $editMode = false;
 $app = null;
 $maxLogoSize = 512; // Maximum dimension (width/height) for logo
 $maxScreenshotSize = [1080, 1920]; // Maximum width x height for screenshots
-$maxLogoFileSize = 500 * 1024; // 500KB
-$maxScreenshotFileSize = 1 * 1024 * 1024; // 1MB
+$maxLogoFileSize = 3 * 1024 * 1024; // 3MB
+$maxScreenshotFileSize = 6 * 1024 * 1024; // 6MB
 
 // CSRF token generation
 if (empty($_SESSION['csrf_token'])) {
@@ -24,7 +24,8 @@ if (isset($_GET['id'])) {
     if ($app) {
         $editMode = true;
     } else {
-        die("You do not have permission to edit this app.");
+        // die("You do not have permission to edit this app.");
+        $errors[] = "You do not have permission to edit this app.";
     }
 }
 
@@ -67,7 +68,7 @@ if (isset($_FILES['logo']) && $_FILES['logo']['error'] == UPLOAD_ERR_OK) {
     } elseif (!in_array($fileType, $allowedImageTypes) || !in_array($ext, ['jpg','jpeg','png','webp'])) {
         $errors[] = "Logo must be a JPG, PNG, or WEBP image.";
     } elseif ($fileSize > $maxLogoFileSize) {
-        $errors[] = "Logo file size must not exceed 500KB.";
+        $errors[] = "Logo file size must not exceed 3MB.";
     } else {
         $logoPath = $uploadsDir . uniqid() . "_" . basename($_FILES['logo']['name']);
         if (move_uploaded_file($_FILES['logo']['tmp_name'], $logoPath)) {
@@ -182,7 +183,7 @@ if (isset($_FILES['apk'])) {
                     } elseif ($imageSize[0] > $maxScreenshotSize[0] || $imageSize[1] > $maxScreenshotSize[1]) {
                         $errors[] = "Screenshot ".($i+1)." dimensions must not exceed {$maxScreenshotSize[0]}x{$maxScreenshotSize[1]}px.";
                     } elseif ($fileSize > $maxScreenshotFileSize) {
-                        $errors[] = "Screenshot ".($i+1)." file size must not exceed 1MB.";
+                        $errors[] = "Screenshot ".($i+1)." file size must not exceed 6MB.";
                     } else {
                         $shotPath = $uploadsDir . uniqid() . "_".($i+1)."_".basename($_FILES['screenshots']['name'][$i]);
                         if (move_uploaded_file($_FILES['screenshots']['tmp_name'][$i], $shotPath)) {
@@ -234,8 +235,9 @@ if (empty($errors)) {
             exit;
         }
     } catch (PDOException $e) {
-        $errors[] = "Database error: " . $e->getMessage();
-        error_log('DATABASE ERROR: ' . $e->getMessage());
+        // $errors[] = "Database error: " . $e->getMessage();
+        $errors[] = "A database error occurred. Please try again later.";
+        error_log('DATABASE ERROR (upload_app): ' . $e->getMessage());
       }
      }
    }
@@ -351,7 +353,7 @@ if (empty($errors)) {
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-image me-1"></i> App Icon (max 512x512px)</label>
-          <input type="file" name="logo" class="form-control" accept="image/jpeg,image/png,image/webp" onchange="validateLogo(this)">
+          <input type="file" name="logo" class="form-control" accept="image/jpeg,image/png,image/webp" onchange="validateLogoSize(this); validateLogo(this);">
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-file-archive me-1"></i> APK File</label>
@@ -359,7 +361,7 @@ if (empty($errors)) {
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-images me-1"></i> Screenshots (max 4)</label>
-          <input type="file" name="screenshots[]" class="form-control" accept="image/jpeg,image/png,image/webp" multiple onchange="validateScreenshots(this)">
+          <input type="file" name="screenshots[]" class="form-control" accept="image/jpeg,image/png,image/webp" multiple onchange="validateScreenshotSize(this); validateScreenshots(this);">
         </div>
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-list me-1"></i> Category</label>
@@ -466,8 +468,8 @@ if (empty($errors)) {
   function validateLogo(input) {
     const file = input.files[0];
     if (file) {
-      if (file.size > 500 * 1024) {
-        alert('Logo file size must not exceed 500KB.');
+      if (file.size > 3 * 1024 * 1024) {
+        alert('Logo file size must not exceed 3MB.');
         input.value = '';
       }
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -480,8 +482,8 @@ if (empty($errors)) {
   function validateScreenshots(input) {
     const files = input.files;
     for (let i = 0; i < files.length; i++) {
-      if (files[i].size > 1024 * 1024) {
-        alert('Each screenshot must not exceed 1MB.');
+      if (files[i].size > 6 * 1024 * 1024) {
+        alert('Each screenshot must not exceed 6MB.');
         input.value = '';
         break;
       }

@@ -3,15 +3,19 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    die("App ID is required.");
+    // die("App ID is required.");
+    $fatal_error = "App ID is required.";
 }
 
-$app_id = intval($_GET['id']);
-$stmt = $pdo->prepare("SELECT * FROM apps WHERE id = ?");
-$stmt->execute([$app_id]);
-$app = $stmt->fetch();
-if (!$app) {
-    die("The app was not found.");
+$app_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+if (!isset($fatal_error)) {
+    $stmt = $pdo->prepare("SELECT * FROM apps WHERE id = ?");
+    $stmt->execute([$app_id]);
+    $app = $stmt->fetch();
+    if (!$app) {
+        // die("The app was not found.");
+        $fatal_error = "The app was not found.";
+    }
 }
 
 // Get developer username
@@ -27,19 +31,29 @@ $stmt3 = $pdo->prepare("SELECT c.*, u.username FROM comments c JOIN users u ON c
 $stmt3->execute([$app_id]);
 $comments = $stmt3->fetchAll();
 
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 // Tuma comment mpya
 $comment_error = '';
 $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment']) && isLoggedIn()) {
-    $comment_text = trim($_POST['comment']);
-    if (empty($comment_text)) {
-        $comment_error = 'Comment cannot be empty!';
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $comment_error = 'Invalid CSRF token. Please refresh the page and try again.';
     } else {
-        $stmt4 = $pdo->prepare("INSERT INTO comments (app_id, user_id, comment) VALUES (?, ?, ?)");
-        $stmt4->execute([$app_id, $_SESSION['user_id'], $comment_text]);
-        $success = 'Comment posted successfully!';
-        header("Location: app_detail.php?id=$app_id#comments");
-        exit;
+        $comment_text = trim($_POST['comment']);
+        if (empty($comment_text)) {
+            $comment_error = 'Comment cannot be empty!';
+        } else {
+            $stmt4 = $pdo->prepare("INSERT INTO comments (app_id, user_id, comment) VALUES (?, ?, ?)");
+            $stmt4->execute([$app_id, $_SESSION['user_id'], $comment_text]);
+            $success = 'Comment posted successfully!';
+            header("Location: app_detail.php?id=$app_id#comments");
+            exit;
+        }
     }
 }
 ?>
@@ -148,6 +162,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment']) && isLogge
 
   <!-- MAIN CONTENT -->
   <div class="container my-4">
+    <?php if (isset($fatal_error)): ?>
+      <div class="alert alert-danger animate__animated animate__fadeInUp text-center my-5"><?php echo $fatal_error; ?></div>
+      <?php exit; ?>
+    <?php endif; ?>
     <div class="row g-4 align-items-center">
       <!-- Left Column: App Icon -->
       <div class="col-12 col-md-4 text-center">
@@ -198,6 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment']) && isLogge
       <h3>Comments</h3>
       <?php if (isLoggedIn()): ?>
         <form method="post" class="mb-4 animate__animated animate__fadeInUp">
+          <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
           <div class="mb-2 d-flex align-items-start">
             <div class="me-2">
               <span class="avatar bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:38px;height:38px;font-size:1.2rem;"><i class="fa fa-user"></i></span>

@@ -5,28 +5,42 @@ require_once 'includes/functions.php';
 $errors = [];
 $success = '';
 
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $token = $_GET['token'] ?? '';
-
-    if (empty($password) || empty($confirm_password)) {
-        $errors[] = "Please fill in both password fields.";
-    } elseif ($password !== $confirm_password) {
-        $errors[] = "Passwords do not match.";
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
     } else {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE reset_token = ?");
-        $stmt->execute([$token]);
-        $user = $stmt->fetch();
-
-        if ($user) {
-            $hashed_password = password_hash($password, PASSWORD_BCRYPT);
-            $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?");
-            $stmt->execute([$hashed_password, $token]);
-
-            $success = "Your password has been successfully reset. You can now <a href='login.php'>log in</a>.";
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+        $token = $_GET['token'] ?? '';
+        if (empty($password) || empty($confirm_password)) {
+            $errors[] = "Please fill in both password fields.";
+        } elseif ($password !== $confirm_password) {
+            $errors[] = "Passwords do not match.";
+        } elseif (strlen($password) < 8) {
+            $errors[] = "Password must be at least 8 characters long.";
         } else {
-            $errors[] = "Invalid or expired token.";
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE reset_token = ?");
+            $stmt->execute([$token]);
+            $user = $stmt->fetch();
+            if ($user) {
+                $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+                try {
+                    $stmt = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL WHERE reset_token = ?");
+                    $stmt->execute([$hashed_password, $token]);
+                    $success = "Your password has been successfully reset. You can now <a href='login.php'>log in</a>.";
+                } catch (PDOException $e) {
+                    $errors[] = "Failed to reset password. Please try again later.";
+                    error_log('DATABASE ERROR (reset_password): ' . $e->getMessage());
+                }
+            } else {
+                $errors[] = "Invalid or expired token.";
+            }
         }
     }
 }
@@ -57,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
       <?php endif; ?>
       <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label for="password" class="form-label">New Password:</label>
           <input type="password" class="form-control" name="password" id="password" required>

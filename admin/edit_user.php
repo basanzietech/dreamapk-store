@@ -11,6 +11,11 @@ if (!isLoggedIn() || $_SESSION['role'] != 'admin') {
 $errors = [];
 $user = null;
 
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("User ID is required.");
 }
@@ -24,29 +29,44 @@ if (!$user) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = clean($_POST['username'] ?? '');
-    $email    = clean($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm  = $_POST['confirm'] ?? '';
-
-    if (empty($username) || empty($email)) {
-        $errors[] = "Tafadhali jaza taarifa zote muhimu (username na email).";
-    }
-    if (!empty($password) && $password !== $confirm) {
-        $errors[] = "Passwords hazilingani.";
-    }
-
-    if (empty($errors)) {
-        if (!empty($password)) {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $hashedPassword, $user_id]);
-        } else {
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $user_id]);
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
+    } else {
+        $username = clean($_POST['username'] ?? '');
+        $email    = clean($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm  = $_POST['confirm'] ?? '';
+        if (empty($username) || empty($email)) {
+            $errors[] = "Tafadhali jaza taarifa zote muhimu (username na email).";
         }
-        header("Location: manage_users.php");
-        exit;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Please enter a valid email address.";
+        }
+        if (!empty($password)) {
+            if ($password !== $confirm) {
+                $errors[] = "Passwords hazilingani.";
+            } elseif (strlen($password) < 8) {
+                $errors[] = "Password must be at least 8 characters long.";
+            }
+        }
+        if (empty($errors)) {
+            try {
+                if (!empty($password)) {
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?");
+                    $stmt->execute([$username, $email, $hashedPassword, $user_id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ? WHERE id = ?");
+                    $stmt->execute([$username, $email, $user_id]);
+                }
+                header("Location: manage_users.php?success=updated");
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = "Failed to update user. Please try again later.";
+                error_log('DATABASE ERROR (edit_user): ' . $e->getMessage());
+            }
+        }
     }
 }
 ?>
@@ -87,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
       <?php endif; ?>
       <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label for="username" class="form-label">Username:</label>
           <input type="text" name="username" id="username" class="form-control" value="<?php echo htmlspecialchars($user['username']); ?>" required>

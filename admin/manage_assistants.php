@@ -8,30 +8,55 @@ if (!isLoggedIn() || $_SESSION['role'] != 'admin') {
 }
 
 $errors = [];
+$success = '';
+$error = '';
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = clean($_POST['username'] ?? '');
-    $email    = clean($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-
-    if (empty($username) || empty($email) || empty($password)) {
-        $errors[] = "Tafadhali jaza taarifa zote.";
-    }
-
-    if (empty($errors)) {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'assistant')");
-        if ($stmt->execute([$username, $email, $hashedPassword])) {
-            header("Location: manage_assistants.php");
-            exit;
-        } else {
-            $errors[] = "Tatizo lilitokea wakati wa kuongeza assistant.";
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
+    } else {
+        $username = clean($_POST['username'] ?? '');
+        $email    = clean($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        if (empty($username) || empty($email) || empty($password)) {
+            $errors[] = "Tafadhali jaza taarifa zote.";
+        }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Please enter a valid email address.";
+        }
+        if (strlen($password) < 8) {
+            $errors[] = "Password must be at least 8 characters long.";
+        }
+        if (empty($errors)) {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            try {
+                $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'assistant')");
+                if ($stmt->execute([$username, $email, $hashedPassword])) {
+                    header("Location: manage_assistants.php?success=added");
+                    exit;
+                } else {
+                    $errors[] = "Tatizo lilitokea wakati wa kuongeza assistant.";
+                }
+            } catch (PDOException $e) {
+                $errors[] = "Failed to add assistant. Please try again later.";
+                error_log('DATABASE ERROR (manage_assistants - insert): ' . $e->getMessage());
+            }
         }
     }
 }
-
-$stmt = $pdo->prepare("SELECT * FROM users WHERE role = 'assistant' ORDER BY id DESC");
-$stmt->execute();
-$assistants = $stmt->fetchAll();
+try {
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE role = 'assistant' ORDER BY id DESC");
+    $stmt->execute();
+    $assistants = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $error = 'Failed to load assistants. Please try again later.';
+    error_log('DATABASE ERROR (manage_assistants - select): ' . $e->getMessage());
+    $assistants = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -115,6 +140,7 @@ $assistants = $stmt->fetchAll();
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="modal-header">
           <h5 class="modal-title" id="addAssistantModalLabel">Add New Assistant</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

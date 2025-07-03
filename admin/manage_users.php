@@ -7,8 +7,15 @@ if (!isLoggedIn() || $_SESSION['role'] != 'admin') {
     exit;
 }
 
-$stmt = $pdo->query("SELECT * FROM users ORDER BY id DESC");
-$users = $stmt->fetchAll();
+$error = '';
+try {
+    $stmt = $pdo->query("SELECT * FROM users ORDER BY id DESC");
+    $users = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $error = 'Failed to load users. Please try again later.';
+    error_log('DATABASE ERROR (manage_users): ' . $e->getMessage());
+    $users = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="sw">
@@ -29,6 +36,9 @@ $users = $stmt->fetchAll();
   <div class="container">
     <div class="dashboard-card">
       <h2 class="mb-4">Orodha ya Watumiaji</h2>
+      <?php if (!empty($error)): ?>
+        <div class="alert alert-danger text-center my-3"><?php echo $error; ?></div>
+      <?php endif; ?>
       <div class="table-responsive">
         <table class="table table-bordered table-striped mb-0">
           <thead>

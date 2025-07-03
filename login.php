@@ -4,26 +4,35 @@ require_once 'includes/functions.php';
 
 $errors = [];
 $success = '';
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email    = clean($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-
-    if (empty($email) || empty($password)) {
-        $errors[] = "Please fill in the email/username and password.";
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
     } else {
-        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR username = ?");
-        $stmt->execute([$email, $email]);
-        $user = $stmt->fetch();
+        $email    = clean($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
 
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id']  = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['role']     = $user['role'];
-            $success = "Login successful! Redirecting to dashboard...";
-            header("Location: dashboard.php");
-            exit;
+        if (empty($email) || empty($password)) {
+            $errors[] = "Please fill in the email/username and password.";
         } else {
-            $errors[] = "Email/Username or password is incorrect.";
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? OR username = ?");
+            $stmt->execute([$email, $email]);
+            $user = $stmt->fetch();
+
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id']  = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role']     = $user['role'];
+                $success = "Login successful! Redirecting to dashboard...";
+                header("Location: dashboard.php");
+                exit;
+            } else {
+                $errors[] = "Email/Username or password is incorrect.";
+            }
         }
     }
 }
@@ -84,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="login-card card shadow-lg p-4 animate__animated animate__fadeInUp" style="max-width:400px;margin:auto;border-radius:20px;">
       <h2 class="mb-4 text-center">Login</h2>
       <form method="post" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-user me-1"></i> Email or Username</label>
           <input type="text" name="email" class="form-control" required autofocus>

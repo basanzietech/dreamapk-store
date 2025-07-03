@@ -7,17 +7,25 @@ if (!isLoggedIn() || ($_SESSION['role'] != 'admin' && $_SESSION['role'] != 'assi
     exit;
 }
 
-// Chukua apps zote kutoka database
-$stmt = $pdo->query("SELECT * FROM apps ORDER BY id DESC");
-$apps = $stmt->fetchAll();
-
-// Data for charts
-// Apps per category
-$catStmt = $pdo->query("SELECT category, COUNT(*) as count FROM apps GROUP BY category");
-$catData = $catStmt->fetchAll(PDO::FETCH_KEY_PAIR);
-// Downloads per month (last 6 months)
-$dlStmt = $pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(downloads) as total FROM apps GROUP BY month ORDER BY month DESC LIMIT 6");
-$dlData = $dlStmt->fetchAll(PDO::FETCH_ASSOC);
+$error = '';
+try {
+    // Chukua apps zote kutoka database
+    $stmt = $pdo->query("SELECT * FROM apps ORDER BY id DESC");
+    $apps = $stmt->fetchAll();
+    // Data for charts
+    // Apps per category
+    $catStmt = $pdo->query("SELECT category, COUNT(*) as count FROM apps GROUP BY category");
+    $catData = $catStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    // Downloads per month (last 6 months)
+    $dlStmt = $pdo->query("SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(downloads) as total FROM apps GROUP BY month ORDER BY month DESC LIMIT 6");
+    $dlData = $dlStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    $error = 'Failed to load dashboard data. Please try again later.';
+    error_log('DATABASE ERROR (admin/index): ' . $e->getMessage());
+    $apps = [];
+    $catData = [];
+    $dlData = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -80,6 +88,9 @@ $dlData = $dlStmt->fetchAll(PDO::FETCH_ASSOC);
     <!-- MAIN CONTENT -->
     <div class="container my-4">
       <h2 class="mb-4">All Apps</h2>
+      <?php if (!empty($error)): ?>
+        <div class="alert alert-danger text-center my-3"><?php echo $error; ?></div>
+      <?php endif; ?>
       <div class="row mb-4">
         <div class="col-md-6 mb-3">
           <canvas id="catChart" height="120"></canvas>

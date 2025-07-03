@@ -5,10 +5,17 @@ require_once 'includes/functions.php';
 
 redirectIfNotLoggedIn();
 
-// Chukua apps za mtumiaji kutoka database
-$stmt = $pdo->prepare("SELECT * FROM apps WHERE user_id = ?");
-$stmt->execute([$_SESSION['user_id']]);
-$user_apps = $stmt->fetchAll();
+$error = '';
+try {
+    // Chukua apps za mtumiaji kutoka database
+    $stmt = $pdo->prepare("SELECT * FROM apps WHERE user_id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $user_apps = $stmt->fetchAll();
+} catch (PDOException $e) {
+    $error = 'Failed to load your apps. Please try again later.';
+    error_log('DATABASE ERROR (dashboard): ' . $e->getMessage());
+    $user_apps = [];
+}
 
 // Data for chart: downloads per app
 $appNames = array_map(function($a){return $a['app_name'];}, $user_apps);

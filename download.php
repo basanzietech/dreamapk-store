@@ -3,7 +3,8 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    die("App ID not found!.");
+    echo "App ID not found.";
+    exit;
 }
 
 $app_id = intval($_GET['id']);
@@ -11,14 +12,24 @@ $stmt = $pdo->prepare("SELECT * FROM apps WHERE id = ?");
 $stmt->execute([$app_id]);
 $app = $stmt->fetch();
 if (!$app) {
-    die("App not found!.");
+    echo "App not found.";
+    exit;
 }
 
 // Ongeza downloads count
-$stmt = $pdo->prepare("UPDATE apps SET downloads = downloads + 1 WHERE id = ?");
-$stmt->execute([$app_id]);
+try {
+    $stmt = $pdo->prepare("UPDATE apps SET downloads = downloads + 1 WHERE id = ?");
+    $stmt->execute([$app_id]);
+} catch (PDOException $e) {
+    error_log('DATABASE ERROR (download): ' . $e->getMessage());
+}
 
 $file = $app['apk_file'];
+// Hakikisha jina la file ni salama (hakuna path traversal)
+if (strpos($file, '../') !== false || strpos($file, '..\\') !== false) {
+    echo "Invalid file path.";
+    exit;
+}
 if (!file_exists($file)) {
     die("File not available.");
 }

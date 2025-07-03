@@ -49,6 +49,30 @@ function validateFile(input, allowedTypes, maxSizeMB) {
     return true;
 }
 
+// Validate logo size (max 3MB)
+function validateLogoSize(input) {
+    const file = input.files[0];
+    if (file && file.size > 3 * 1024 * 1024) {
+        alert('Logo file size must not exceed 3MB.');
+        input.value = '';
+        return false;
+    }
+    return true;
+}
+
+// Validate screenshot size (max 6MB per file)
+function validateScreenshotSize(input) {
+    const files = input.files;
+    for (let i = 0; i < files.length; i++) {
+        if (files[i].size > 6 * 1024 * 1024) {
+            alert('Each screenshot must not exceed 6MB.');
+            input.value = '';
+            return false;
+        }
+    }
+    return true;
+}
+
 // Progress bar for upload
 const form = document.querySelector('form[enctype="multipart/form-data"]');
 if (form) {

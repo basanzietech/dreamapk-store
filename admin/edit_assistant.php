@@ -12,7 +12,8 @@ $errors = [];
 $assistant = null;
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    die("Assistant ID is required.");
+    // die("Assistant ID is required.");
+    $fatal_error = "Assistant ID is required.";
 }
 
 $assistant_id = intval($_GET['id']);
@@ -20,34 +21,55 @@ $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ? AND role = 'assistant'")
 $stmt->execute([$assistant_id]);
 $assistant = $stmt->fetch();
 if (!$assistant) {
-    die("Assistant not found.");
+    // die("Assistant not found.");
+    $fatal_error = "Assistant not found.";
+}
+
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = clean($_POST['username'] ?? '');
-    $email = clean($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm = $_POST['confirm'] ?? '';
-    $active = isset($_POST['active']) ? 1 : 0;
-
-    if (empty($username) || empty($email)) {
-        $errors[] = "Tafadhali jaza taarifa zote muhimu (Username na Email).";
-    }
-    if (!empty($password) && $password !== $confirm) {
-        $errors[] = "Passwords hazilingani.";
-    }
-
-    if (empty($errors)) {
-        if (!empty($password)) {
-            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ?, active = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $hashedPassword, $active, $assistant_id]);
-        } else {
-            $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, active = ? WHERE id = ?");
-            $stmt->execute([$username, $email, $active, $assistant_id]);
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
+    } else {
+        $username = clean($_POST['username'] ?? '');
+        $email = clean($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm = $_POST['confirm'] ?? '';
+        $active = isset($_POST['active']) ? 1 : 0;
+        if (empty($username) || empty($email)) {
+            $errors[] = "Tafadhali jaza taarifa zote muhimu (Username na Email).";
         }
-        header("Location: manage_assistants.php");
-        exit;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "Please enter a valid email address.";
+        }
+        if (!empty($password)) {
+            if ($password !== $confirm) {
+                $errors[] = "Passwords hazilingani.";
+            } elseif (strlen($password) < 8) {
+                $errors[] = "Password must be at least 8 characters long.";
+            }
+        }
+        if (empty($errors)) {
+            try {
+                if (!empty($password)) {
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, password = ?, active = ? WHERE id = ?");
+                    $stmt->execute([$username, $email, $hashedPassword, $active, $assistant_id]);
+                } else {
+                    $stmt = $pdo->prepare("UPDATE users SET username = ?, email = ?, active = ? WHERE id = ?");
+                    $stmt->execute([$username, $email, $active, $assistant_id]);
+                }
+                header("Location: manage_assistants.php?success=updated");
+                exit;
+            } catch (PDOException $e) {
+                $errors[] = "Failed to update assistant. Please try again later.";
+                error_log('DATABASE ERROR (edit_assistant): ' . $e->getMessage());
+            }
+        }
     }
 }
 ?>
@@ -77,7 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+      <?php if (isset($fatal_error)): ?>
+        <div class="alert alert-danger text-center my-5"><?php echo $fatal_error; ?></div>
+        <?php exit; ?>
+      <?php endif; ?>
       <form method="post" action="">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label for="username" class="form-label">Username:</label>
           <input type="text" name="username" id="username" class="form-control" value="<?php echo htmlspecialchars($assistant['username']); ?>" required>

@@ -3,40 +3,54 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 $errors = [];
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = clean($_POST['username'] ?? '');
-    $email    = clean($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirm = $_POST['confirm_password'] ?? '';
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please refresh the page and try again.';
+    } else {
+        $username = clean($_POST['username'] ?? '');
+        $email    = clean($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirm = $_POST['confirm_password'] ?? '';
 
-    if (empty($username) || empty($email) || empty($password)) {
-        $errors[] = "Please fill in all required parts.";
-    }
-    if ($password !== $confirm) {
-        $errors[] = "Passwords are not the same.";
-    }
+        if (empty($username) || empty($email) || empty($password)) {
+            $errors[] = "Please fill in all required parts.";
+        }
+        if ($password !== $confirm) {
+            $errors[] = "Passwords are not the same.";
+        }
 
-    // Angalia kama kuna user yeyote, kama hapo kwanza awe admin
-    $stmt = $pdo->query("SELECT COUNT(*) FROM users");
-    $userCount = $stmt->fetchColumn();
-    $role = ($userCount == 0) ? 'admin' : 'user';
+        // Angalia kama kuna user yeyote, kama hapo kwanza awe admin
+        $stmt = $pdo->query("SELECT COUNT(*) FROM users");
+        $userCount = $stmt->fetchColumn();
+        $role = ($userCount == 0) ? 'admin' : 'user';
 
-    // Angalia kama email tayari imesajiliwa
-    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    if ($stmt->rowCount() > 0) {
-        $errors[] = "Email is already registered.";
-    }
+        // Angalia kama email tayari imesajiliwa
+        $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->rowCount() > 0) {
+            $errors[] = "Email is already registered.";
+        }
 
-    if (empty($errors)) {
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
-        if ($stmt->execute([$username, $email, $hashedPassword, $role])) {
-    $success = 'Registration successful! Please login to continue.';
-       header("Location: login.php");
-        exit;
-        } else {
-            $errors[] = "A problem occurred while inserting data.";
+        if (empty($errors)) {
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)");
+            try {
+                if ($stmt->execute([$username, $email, $hashedPassword, $role])) {
+                    $success = 'Registration successful! Please login to continue.';
+                    header("Location: login.php");
+                    exit;
+                } else {
+                    $errors[] = "A problem occurred while inserting data.";
+                }
+            } catch (PDOException $e) {
+                $errors[] = "A database error occurred. Please try again later.";
+                error_log('DATABASE ERROR (register): ' . $e->getMessage());
+            }
         }
     }
 }
@@ -97,6 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="register-card card shadow-lg p-4 animate__animated animate__fadeInUp" style="max-width:400px;margin:auto;border-radius:20px;">
       <h2 class="mb-4 text-center">Create Account</h2>
       <form method="post" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
         <div class="mb-3">
           <label class="form-label"><i class="fa fa-user me-1"></i> Username</label>
           <input type="text" name="username" class="form-control" required maxlength="50">

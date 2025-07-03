@@ -8,21 +8,37 @@ if (!isLoggedIn() || $_SESSION['role'] != 'admin') {
 }
 
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-    die("User ID is required.");
+    echo "User ID is required.";
+    exit;
+}
+
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+if (!isset($_GET['csrf_token']) || $_GET['csrf_token'] !== $_SESSION['csrf_token']) {
+    echo "Invalid CSRF token. Please refresh the page and try again.";
+    exit;
 }
 
 $user_id = intval($_GET['id']);
-
-// Optional: Prevent deletion of your own account, if needed
-// if ($user_id == $_SESSION['user_id']) {
-//     die("You cannot delete your own account.");
-// }
-
-$stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-if ($stmt->execute([$user_id])) {
-    header("Location: manage_users.php");
+// Zuia kufuta account yako mwenyewe
+if ($user_id == $_SESSION['user_id']) {
+    echo "You cannot delete your own account.";
     exit;
-} else {
-    die("Failed to delete user.");
+}
+try {
+    $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
+    if ($stmt->execute([$user_id])) {
+        header("Location: manage_users.php?success=deleted");
+        exit;
+    } else {
+        echo "Failed to delete user.";
+        exit;
+    }
+} catch (PDOException $e) {
+    error_log('DATABASE ERROR (delete_user): ' . $e->getMessage());
+    echo "Failed to delete user. Please try again later.";
+    exit;
 }
 ?>
