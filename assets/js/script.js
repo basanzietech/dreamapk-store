@@ -116,4 +116,4 @@ document.addEventListener('DOMContentLoaded', function() {
             tagsInput.value = tags.join(', ');
         });
     }
-}); 
+});
